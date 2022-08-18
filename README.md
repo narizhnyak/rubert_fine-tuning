@@ -1,4 +1,4 @@
-neuroclassifier
+rubert_fine-tuning
 ==============================
 
 A short description of the project.

@@ -1,11 +1,9 @@
 import torch
-from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
+from torch.utils.data import DataLoader
 
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 from transformers import AutoModelForSequenceClassification
-
-from typing import Union
 
 import time
 import click
@@ -33,19 +31,6 @@ def get_model(model_checkpoint: str, num_labels: int) -> any:
     )
 
 
-def get_data_loader(
-    dataset: Union[TensorDataset, torch.utils.data.Subset], batch_size: int
-) -> DataLoader:
-    """
-    @param dataset: train or test dataset
-    @param batch_size: size of one batch in dataloader object
-    @return: dataloader object
-    """
-    return DataLoader(
-        dataset, sampler=SequentialSampler(dataset), batch_size=batch_size
-    )
-
-
 def train_model(
     model: any,
     device: str,
@@ -59,7 +44,6 @@ def train_model(
     @param train_dataloader: processed dataloader object for model training
     @return: trained model object
     """
-
     batch_size = train_dataloader.batch_size
     total_steps = len(train_dataloader) * num_epochs
 
@@ -120,10 +104,11 @@ def train_model(
     return model
 
 
-def get_path_and_model_index(default_path: str, new_path: bool) -> tuple[str, int]:
+def get_path_and_model_index(default_path: str) -> tuple[str, int]:
     """
+    all models have a name like "model{number}".
+    So this function finds the digits at the end of the string
     @param default_path: name of model directory
-    @param new_path: flag that necessary get path for new model
     @return: actual path and index for new model
     """
     digits = ""
@@ -133,25 +118,23 @@ def get_path_and_model_index(default_path: str, new_path: bool) -> tuple[str, in
             if current_symbol.isdigit():
                 digits = current_symbol + digits
             elif digits:
-                new_index = int(digits)
-                if new_path:
-                    new_index += 1
+                new_index = int(digits) + 1
                 return default_path[:-i] + str(new_index), new_index
 
     return default_path, 0
 
 
-def get_actual_path(files_path: str, new_path: bool) -> str:
+def get_actual_path(files_path: str) -> str:
     """
+    this function finds the latest version of the model
     @param files_path: path to save model
-    @param new_path: flag that necessary get path for new model
     @return: actual directory for new fine-tuned model
     """
     names = listdir(files_path)
     actual_path, index = files_path + "model0", 0
 
     for name in names:
-        current_path, current_index = get_path_and_model_index(files_path + name, new_path)
+        current_path, current_index = get_path_and_model_index(files_path + name)
         if current_index > index:
             index = current_index
             actual_path = current_path
@@ -168,10 +151,10 @@ def main(
     model_checkpoint: str,
     train_dataloader_filepath: str,
     num_epochs: int = 3,
-    full_train: bool = False
+    full_train: bool = False,  # after validating and checking results we must train model on full dataset
 ) -> None:
     """
-    Saving trained model to file
+    Trains model and save it to a file
     @param model_checkpoint: model object
     @param train_dataloader_filepath: path to training dataloader file
     @param num_epochs: number of model learning epochs
@@ -188,7 +171,7 @@ def main(
 
     train_model(model, device, num_epochs, train_dataloader)
 
-    actual_path = get_actual_path(path_to_main_folder, True)
+    actual_path = get_actual_path(path_to_main_folder)
     model.save_pretrained(actual_path)
 
 

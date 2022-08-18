@@ -44,7 +44,7 @@ def main(output_filepath: str) -> None:
 
     cur_scroll_count = 0
 
-    while cur_scroll_count != scroll_count and cur_scroll_count < 20:
+    while cur_scroll_count != scroll_count and cur_scroll_count < 2:
         orgs_data = scroll_index(scroll_id)["hits"]["hits"]
         cur_scroll_count = cur_scroll_count + 1
         for one_org in orgs_data:

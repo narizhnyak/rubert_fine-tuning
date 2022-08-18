@@ -23,11 +23,15 @@ def get_input_ids_max_len(df_text_column: pd.Series, tokenizer: any) -> int:
     @param tokenizer: tokenizer object
     @return: max length of input ids from the tokenizer
     """
-    input_ids = df_text_column.apply(lambda x: tokenizer.encode(x, add_special_tokens=True))
+    input_ids = df_text_column.apply(
+        lambda x: tokenizer.encode(x, add_special_tokens=True)
+    )
     return max(input_ids.apply(len))
 
 
-def tokenize_text_field(df_text_column: pd.Series, tokenizer: any, max_len: int) -> pd.Series:
+def tokenize_text_field(
+    df_text_column: pd.Series, tokenizer: any, max_len: int
+) -> pd.Series:
     """
     @param df_text_column: column to be processed by the tokenizer
     @param tokenizer: tokenizer object
@@ -75,7 +79,7 @@ def main(
     labels_filepath: str,
 ) -> None:
     """
-    Save interim data (input ids, token type ids, attention mask, object labels)
+    Processes and saves interim data (input ids, token type ids, attention mask, object labels)
     @param df_filepath: path to the raw dataframe file
     @param model_checkpoint: name of the model checkpoint
     @param input_ids_filepath: path to the interim data file with input ids
@@ -92,9 +96,7 @@ def main(
     max_len = get_input_ids_max_len(text_column, tokenizer)
     tokenized_text = tokenize_text_field(text_column, tokenizer, max_len)
 
-    input_ids = get_offset_and_specify_torch_datatype(
-        tokenized_text, "input_ids"
-    )
+    input_ids = get_offset_and_specify_torch_datatype(tokenized_text, "input_ids")
     torch.save(input_ids, input_ids_filepath)
 
     token_type_ids = get_offset_and_specify_torch_datatype(

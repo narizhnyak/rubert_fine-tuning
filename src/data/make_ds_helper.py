@@ -1,9 +1,8 @@
 import elasticsearch.client
 from elasticsearch import Elasticsearch
 
-client = Elasticsearch([{"host": "elastic-atlas01.cmo.rubin.local", "port": 9200}])
-index_name = "fpg_01.04.2022"
-# скрыть!!!
+client = Elasticsearch([{"host": "*** hidden ***", "port": 9200}])
+index_name = "*** hidden ***"
 
 
 def get_scroll_query() -> elasticsearch.client.Elasticsearch:
@@ -51,16 +50,7 @@ def get_orgs_info(one_org: dict) -> list:
     @param one_org: one organization response
     @return: necessary information from response
     """
-    # скрыть!!!
-    if one_org is not None:
-        if one_org.get("_source").get("organization"):
-            org_data = [
-                one_org["_source"]["organization"]["ogrn"],
-                one_org["_source"]["organization"]["fullname"],
-                one_org["_source"]["aimid"],
-                one_org["_source"]["statusid"] == 16,
-            ]
 
-            return org_data
-    else:
-        return []
+    # hidden
+
+    return []

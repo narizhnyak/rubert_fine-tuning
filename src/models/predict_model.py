@@ -10,8 +10,10 @@ from sklearn.metrics import accuracy_score
 
 import click
 import logging
+from os import remove
+from os.path import exists
 
-from src.models.train_model import get_device, get_actual_path
+from src.models.train_model import get_device
 
 
 def get_all_metrics(preds: np.ndarray, true_label_ids: np.ndarray) -> dict:
@@ -59,9 +61,11 @@ def val_model(
     model: any,
     validation_dataloader: DataLoader,
     device: str,
+    model_path: str
 ) -> None:
 
-    print("Validation:")
+    log_filename = 'validation.log'
+    model_full_path = model_path + log_filename
 
     model.eval()
 
@@ -106,30 +110,31 @@ def val_model(
 
     for metric in eval_metrics.keys():
         metric_value = eval_metrics[metric] / len(validation_dataloader)
-        file_put_contents('validation.txt', metric + ": {0:.4f}".format(metric_value))
+        if exists(model_full_path):
+            remove(model_full_path)
+        file_put_contents(model_full_path, f'{metric}: {metric_value:.4f}')
 
     return
 
 
 @click.command()
-@click.argument("partial_trained_model_filepath", type=click.Path(exists=True))
 @click.argument("validation_dataloader_filepath", type=click.Path(exists=True))
+@click.argument("partial_trained_model_filepath", type=click.Path(exists=True))
 def main(
-    validation_dataloader_filepath: str
+    validation_dataloader_filepath: str,
+    partial_trained_model_filepath: str
 ) -> None:
     """
-    Saving trained model to file
+    Writes model metrics in a log file
     @param validation_dataloader_filepath: path to validation dataloader file
+    @param partial_trained_model_filepath: path to partial trained model file
     """
-
-    path_to_main_folder = "models/partial_trained_models/"
-    actual_path = get_actual_path(path_to_main_folder, False)
-
+    path_to_main_folder = partial_trained_model_filepath.replace('pytorch_model.bin', '')
     device = get_device()
-    model = torch.load(actual_path)
+    model = torch.load(partial_trained_model_filepath)
     validation_dataloader = torch.load(validation_dataloader_filepath)
 
-    val_model(model, validation_dataloader, device)
+    val_model(model, validation_dataloader, device, path_to_main_folder)
 
 
 if __name__ == "__main__":

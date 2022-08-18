@@ -1,7 +1,7 @@
 rule all:
     input:
         "models/full_trained_models/model{}/pytorch_model.bin",
-        "a.txt",
+        "models/partial_trained_models/model{}/validation.log",
         "models/partial_trained_models/model{}/pytorch_model.bin",
         "data/processed/full_dataloader.pth",
         "data/processed/validation_dataloader.pth",
@@ -11,7 +11,6 @@ rule all:
         "data/interim/token_type_ids.pt",
         "data/interim/input_ids.pt",
         "data/raw/orgs_df.csv",
-        "data/raw/best_df.csv"
 
 
 rule make_dataset:
@@ -23,7 +22,6 @@ rule make_dataset:
 
 rule build_text_features:
     input:
-        "data/raw/best_df.csv",
         "data/raw/orgs_df.csv"
     output:
         "data/interim/labels.pt",
@@ -64,10 +62,10 @@ rule partial_training_model:
 
 rule predict_partial_training_model:
     input:
-        "models/partial_trained_models/model{}/pytorch_model.bin",
-        "data/processed/validation_dataloader.pth"
+        "data/processed/validation_dataloader.pth",
+        "models/partial_trained_models/model{}/pytorch_model.bin"
     output:
-        "a.txt"
+        "models/partial_trained_models/model{}/validation.log"
     shell:
         """python -m src.models.predict_model \
         {input[0]} {input[1]}"""
@@ -75,7 +73,8 @@ rule predict_partial_training_model:
 
 rule full_training_model:
     input:
-        "data/processed/full_dataloader.pth"
+        "data/processed/full_dataloader.pth",
+        "models/partial_trained_models/model{}/validation.log"
     output:
         "models/full_trained_models/model{}/pytorch_model.bin"
     shell:

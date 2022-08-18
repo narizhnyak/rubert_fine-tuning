@@ -46,7 +46,9 @@ def get_train_val_stratified_dataset(
     return train_dataset, val_dataset
 
 
-def get_data_loader(dataset: Union[TensorDataset, torch.utils.data.Subset], batch_size: int) -> DataLoader:
+def get_data_loader(
+    dataset: Union[TensorDataset, torch.utils.data.Subset], batch_size: int
+) -> DataLoader:
     """
     @param dataset: train or test dataset
     @param batch_size: size of one batch in dataloader object
@@ -79,7 +81,7 @@ def main(
     test_size: float,
 ) -> None:
     """
-    Save train and validation dataloader objects to /processed
+    Saves train and validation dataloader objects to /processed
     @param input_ids_filepath: path to an existing input ids file
     @param token_type_ids_filepath: path to an existing token type ids file
     @param attention_mask_filepath: path to an existing attention mask file

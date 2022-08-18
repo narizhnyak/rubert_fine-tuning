@@ -1,0 +1,11 @@
+# local package
+-e .
+
+# external requirements
+click
+elasticsearch==7.9.1
+torch
+transformers
+pandas
+numpy
+sklearn

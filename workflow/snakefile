@@ -1,0 +1,84 @@
+rule all:
+    input:
+        "models/full_trained_models/model{}/pytorch_model.bin",
+        "a.txt",
+        "models/partial_trained_models/model{}/pytorch_model.bin",
+        "data/processed/full_dataloader.pth",
+        "data/processed/validation_dataloader.pth",
+        "data/processed/train_dataloader.pth",
+        "data/interim/labels.pt",
+        "data/interim/attention_mask.pt",
+        "data/interim/token_type_ids.pt",
+        "data/interim/input_ids.pt",
+        "data/raw/orgs_df.csv",
+        "data/raw/best_df.csv"
+
+
+rule make_dataset:
+    output:
+        "data/raw/orgs_df.csv"
+    shell:
+        "python -m src.data.make_dataset {output}"
+
+
+rule build_text_features:
+    input:
+        "data/raw/best_df.csv",
+        "data/raw/orgs_df.csv"
+    output:
+        "data/interim/labels.pt",
+        "data/interim/attention_mask.pt",
+        "data/interim/token_type_ids.pt",
+        "data/interim/input_ids.pt"
+    shell:
+        """python -m src.features.build_text_features \
+        {input[0]} cointegrated/rubert-base-cased-nli-threeway \
+        {output[3]} {output[2]} {output[1]} {output[0]}"""
+
+
+rule build_dataloader:
+    input:
+        "data/interim/labels.pt",
+        "data/interim/attention_mask.pt",
+        "data/interim/token_type_ids.pt",
+        "data/interim/input_ids.pt"
+    output:
+        "data/processed/full_dataloader.pth",
+        "data/processed/validation_dataloader.pth",
+        "data/processed/train_dataloader.pth"
+    shell:
+        """python -m src.features.build_dataloader {input[3]} {input[2]} \
+        {input[1]} {input[0]} {output[2]} {output[1]} {output[0]} 32 0.3"""
+
+
+rule partial_training_model:
+    input:
+        "data/processed/train_dataloader.pth"
+    output:
+        "models/partial_trained_models/model{}/pytorch_model.bin"
+    shell:
+        """python -m src.models.train_model \
+        cointegrated/rubert-base-cased-nli-threeway {input[0]} \
+        3 false"""
+
+
+rule predict_partial_training_model:
+    input:
+        "models/partial_trained_models/model{}/pytorch_model.bin",
+        "data/processed/validation_dataloader.pth"
+    output:
+        "a.txt"
+    shell:
+        """python -m src.models.predict_model \
+        {input[0]} {input[1]}"""
+
+
+rule full_training_model:
+    input:
+        "data/processed/full_dataloader.pth"
+    output:
+        "models/full_trained_models/model{}/pytorch_model.bin"
+    shell:
+        """python -m src.models.train_model \
+        cointegrated/rubert-base-cased-nli-threeway {input[0]} \
+        3 true"""
